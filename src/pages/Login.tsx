@@ -1,22 +1,32 @@
 import React from "react";
 import { Form, Input, Button, Card, message } from "antd";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3000/auth/login",
-        values
-      );
-      localStorage.setItem("token", response.data.access_token);
-      message.success("Connexion réussie !");
-      navigate("/dashboard");
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem("token", data.access_token); // Stockage du token
+        message.success("Connexion réussie !");
+        navigate("/dashboard"); // Rediriger après connexion
+      } else {
+        message.error(data.message || "Échec de connexion !");
+      }
     } catch (error) {
-      message.error("Échec de la connexion. Vérifiez vos identifiants.");
+      console.error("Erreur de connexion:", error);
+      message.error("Impossible de se connecter !");
     }
   };
 
@@ -31,7 +41,7 @@ const Login: React.FC = () => {
       }}
     >
       <Card style={{ width: 400, padding: "20px" }}>
-        <img src="/images/dixner.png" alt="Dixner Logo" width="300" />{" "}
+        <img src="/images/dixner.png" alt="Dixner Logo" width="300" />
         <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Connexion</h2>
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item
